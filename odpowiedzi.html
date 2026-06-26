@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Odpowiedzi - Eksploracja danych / Python ML</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --text: #172033;
+      --muted: #5d667a;
+      --card: #ffffff;
+      --line: #d9deea;
+      --accent: #2457c5;
+      --code: #eef2fa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    main {
+      width: min(100% - 32px, 980px);
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+
+    .note {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .answers {
+      display: grid;
+      gap: 12px;
+      counter-reset: question;
+    }
+
+    article {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 18px;
+      counter-increment: question;
+    }
+
+    h2 {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    h2::before {
+      content: counter(question) ".";
+      color: var(--accent);
+      font-weight: 800;
+      min-width: 34px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      background: var(--code);
+      border-radius: 6px;
+    }
+
+    code {
+      padding: 1px 5px;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid var(--line);
+    }
+
+    strong {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Odpowiedzi do pytań z eksploracji danych i Machine Learning</h1>
+      <p class="note">Odpowiedzi przygotowane głównie na podstawie materiałów z folderu <code>wyklady</code>, uzupełnione wiedzą ogólną tam, gdzie pytanie wykraczało poza notatki. W pliku <code>pytania.txt</code> pominięto numer 56, dlatego tutaj jest 56 odpowiedzi dla pytań 1-55 oraz 57.</p>
+    </header>
+
+    <section class="answers">
+      <article>
+        <h2>Na jakie pytania odpowiada klasyfikacja?</h2>
+        <p>Klasyfikacja odpowiada na pytania typu: <strong>do której klasy/kategorii należy obiekt?</strong> Przykłady: czy e-mail to spam, czy klient odejdzie, czy na zdjęciu jest kot.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest uczenie nadzorowane?</h2>
+        <p>Uczenie nadzorowane to uczenie modelu na danych z etykietami, czyli z poprawnymi odpowiedziami. Model uczy się zależności między cechami wejściowymi a wynikiem, np. klasą lub wartością liczbową.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest uczenie nienadzorowane?</h2>
+        <p>Uczenie nienadzorowane polega na analizie danych bez gotowych etykiet. Model sam szuka struktury w danych, np. podobnych grup obserwacji albo ukrytych wzorców.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest uczenie ze wzmocnieniem?</h2>
+        <p>Uczenie ze wzmocnieniem to metoda, w której agent uczy się przez interakcję ze środowiskiem. Za dobre działania dostaje nagrody, za złe kary, a jego celem jest maksymalizacja sumy nagród.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest klasteryzacja?</h2>
+        <p>Klasteryzacja to grupowanie podobnych obserwacji w skupienia, czyli klastry, bez wcześniejszych etykiet klas. Przykładem jest segmentacja klientów według podobnych zachowań.</p>
+      </article>
+
+      <article>
+        <h2>Opisz overfitting</h2>
+        <p>Overfitting, czyli przeuczenie, występuje wtedy, gdy model zbyt dokładnie dopasowuje się do danych treningowych, włącznie z szumem. Taki model ma dobre wyniki na treningu, ale słabo działa na nowych danych.</p>
+      </article>
+
+      <article>
+        <h2>Co oznacza korelacja = 1?</h2>
+        <p>Korelacja równa 1 oznacza idealną dodatnią zależność liniową. Gdy jedna zmienna rośnie, druga również rośnie proporcjonalnie. Nie oznacza to jednak automatycznie związku przyczynowo-skutkowego.</p>
+      </article>
+
+      <article>
+        <h2>Co robią biblioteki importowane w kodzie?</h2>
+        <pre><code>import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt</code></pre>
+        <p><code>numpy</code> służy do obliczeń numerycznych i pracy na tablicach, <code>pandas</code> do analizy danych tabelarycznych, a <code>matplotlib.pyplot</code> do tworzenia wykresów.</p>
+      </article>
+
+      <article>
+        <h2>Do czego stosujemy regresję?</h2>
+        <p>Regresję stosujemy do przewidywania wartości liczbowych ciągłych, np. ceny mieszkania, kursu waluty, temperatury lub przychodów firmy.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest dummy coding?</h2>
+        <p>Dummy coding to zamiana zmiennych kategorycznych na zmienne liczbowe zero-jedynkowe. Przykładowo kolumna z kategoriami może zostać zamieniona na kilka kolumn z wartościami 0 lub 1.</p>
+      </article>
+
+      <article>
+        <h2>Do czego służy funkcja <code>train_test_split(X, y, test_size=0.2, random_state=42)</code>?</h2>
+        <p>Funkcja dzieli dane na zbiór treningowy i testowy. <code>test_size=0.2</code> oznacza, że 20% danych trafi do testu, a <code>random_state=42</code> zapewnia powtarzalny podział.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest współczynnik determinacji i jakie przyjmuje wartości?</h2>
+        <p>Współczynnik determinacji, czyli <strong>R²</strong>, mówi, jaka część zmienności zmiennej zależnej jest wyjaśniana przez model regresji. Najczęściej interpretuje się go w zakresie od 0 do 1, gdzie 1 oznacza idealne dopasowanie. W niektórych przypadkach może być też ujemny, gdy model jest gorszy od prostego modelu bazowego.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest błąd średniokwadratowy?</h2>
+        <p>Błąd średniokwadratowy, czyli MSE, to średnia z kwadratów różnic między wartościami rzeczywistymi a przewidzianymi przez model. Im mniejszy MSE, tym lepiej model dopasowuje się do danych.</p>
+      </article>
+
+      <article>
+        <h2>Jak podejmują decyzję lasy losowe w pytaniach klasyfikacji?</h2>
+        <p>W klasyfikacji każde drzewo w lesie losowym oddaje głos na jedną klasę. Ostateczna decyzja to najczęściej klasa z największą liczbą głosów, czyli głosowanie większościowe.</p>
+      </article>
+
+      <article>
+        <h2>Do czego służy biblioteka pandas? Jak ją zainstalować w Pythonie?</h2>
+        <p><code>pandas</code> służy do wczytywania, czyszczenia, przekształcania i analizowania danych tabelarycznych, głównie w strukturach <code>DataFrame</code> i <code>Series</code>. Instalacja: <code>pip install pandas</code>.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest TensorFlow?</h2>
+        <p>TensorFlow to framework do uczenia maszynowego stworzony przez Google. Najczęściej używa się go do budowy, trenowania i uruchamiania sieci neuronowych oraz modeli deep learning.</p>
+      </article>
+
+      <article>
+        <h2>Do czego służy biblioteka matplotlib? Jak ją zainstalować w Pythonie?</h2>
+        <p><code>matplotlib</code> służy do tworzenia wykresów i wizualizacji danych w Pythonie. Instalacja: <code>pip install matplotlib</code>.</p>
+      </article>
+
+      <article>
+        <h2>Jak podejmują decyzję lasy losowe w problemach klasyfikacji?</h2>
+        <p>Tak samo jak w poprzednim pytaniu: każde drzewo klasyfikuje obserwację, a las wybiera klasę wskazaną przez większość drzew.</p>
+      </article>
+
+      <article>
+        <h2>Za co odpowiada funkcja <code>df['Age'].mean()</code>?</h2>
+        <p>Oblicza średnią arytmetyczną wartości znajdujących się w kolumnie <code>Age</code> obiektu <code>DataFrame</code>.</p>
+      </article>
+
+      <article>
+        <h2>Do czego możemy użyć drzew decyzyjnych?</h2>
+        <p>Drzew decyzyjnych używamy do klasyfikacji i regresji. Model podejmuje decyzje przez kolejne warunki w węzłach drzewa, aż dojdzie do liścia z wynikiem.</p>
+      </article>
+
+      <article>
+        <h2>Algorytmy ensemble to</h2>
+        <p>Algorytmy ensemble to metody łączące wiele modeli w jeden silniejszy model. Przykładami są lasy losowe, bagging, boosting i gradient boosting.</p>
+      </article>
+
+      <article>
+        <h2>Opisz algorytm SVM</h2>
+        <p>SVM, czyli Support Vector Machine, szuka hiperpłaszczyzny najlepiej rozdzielającej klasy. Robi to tak, aby margines między granicą decyzyjną a najbliższymi punktami, czyli wektorami nośnymi, był jak największy. SVM może też działać nieliniowo dzięki funkcjom jądra.</p>
+      </article>
+
+      <article>
+        <h2>Lasy losowe bazują na:</h2>
+        <p>Lasy losowe bazują na wielu drzewach decyzyjnych. Każde drzewo jest uczone na losowej próbce danych i często na losowym podzbiorze cech, a wyniki są łączone przez głosowanie lub uśrednianie.</p>
+      </article>
+
+      <article>
+        <h2><code>fillna</code> użyjemy do:</h2>
+        <p><code>fillna()</code> służy do uzupełniania brakujących wartości, np. wartości <code>NaN</code>, konkretną wartością, średnią, medianą albo inną metodą.</p>
+      </article>
+
+      <article>
+        <h2>Do czego użyjemy funkcji <code>describe()</code>, <code>groupby()</code>, <code>str.lower()</code>?</h2>
+        <p><code>describe()</code> zwraca statystyki opisowe danych, <code>groupby()</code> grupuje dane według wybranej kolumny, a <code>str.lower()</code> zamienia tekst w kolumnie na małe litery.</p>
+      </article>
+
+      <article>
+        <h2>Co zrobi kod <code>moja_lista[::-1]</code>?</h2>
+        <p>Zwróci elementy listy w odwrotnej kolejności. Jest to slicing z krokiem <code>-1</code>.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest współczynnik Giniego?</h2>
+        <p>Współczynnik Giniego w drzewach decyzyjnych mierzy nieczystość węzła. Wartość 0 oznacza węzeł idealnie czysty, czyli zawierający obserwacje jednej klasy.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest RBF (Radial Basis Function)?</h2>
+        <p>RBF to funkcja jądra, często używana w SVM. Pozwala modelować nieliniowe granice decyzyjne przez przekształcenie danych do przestrzeni, w której łatwiej je rozdzielić.</p>
+      </article>
+
+      <article>
+        <h2>Jaki jest plus stosowania regresji wielomianowej nad liniową?</h2>
+        <p>Regresja wielomianowa może opisywać zależności nieliniowe, czyli krzywoliniowe. Dzięki temu może lepiej dopasować się do danych, gdy zwykła prosta regresja liniowa jest zbyt uproszczona.</p>
+      </article>
+
+      <article>
+        <h2>Czym się różni regresja wieloraka od wielomianowej?</h2>
+        <p>Regresja wieloraka używa wielu zmiennych objaśniających. Regresja wielomianowa dodaje potęgi zmiennych, np. x² lub x³, aby modelować nieliniowość.</p>
+      </article>
+
+      <article>
+        <h2>K-means używamy do?</h2>
+        <p>K-means używamy do klasteryzacji. Algorytm dzieli dane na <code>k</code> skupień, przypisując obserwacje do najbliższego centroidu.</p>
+      </article>
+
+      <article>
+        <h2>Co oznaczają kolory w drzewie decyzyjnym?</h2>
+        <p>W wizualizacji drzewa decyzyjnego kolor zwykle oznacza dominującą klasę w danym węźle, a intensywność koloru pokazuje czystość węzła. Im bardziej jednolity węzeł, tym mocniejszy kolor.</p>
+      </article>
+
+      <article>
+        <h2>Czym są lasy losowe i jakie są minusy ich stosowania?</h2>
+        <p>Lasy losowe to zespół wielu drzew decyzyjnych. Ich zaletą jest dobra skuteczność i mniejsza podatność na przeuczenie niż pojedyncze drzewo. Minusy to większy koszt obliczeniowy, większe zużycie pamięci i mniejsza interpretowalność.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest R² i ile powinien wynosić?</h2>
+        <p>R² to współczynnik determinacji, czyli miara dopasowania modelu regresji. Im bliżej 1, tym lepiej model wyjaśnia zmienność danych. W praktyce oczekuje się możliwie wysokiej wartości, ale trzeba uważać na przeuczenie.</p>
+      </article>
+
+      <article>
+        <h2>Do czego użyjemy biblioteki seaborn?</h2>
+        <p><code>seaborn</code> służy do tworzenia czytelnych wizualizacji statystycznych. Jest nadbudową nad <code>matplotlib</code> i ułatwia tworzenie wykresów rozkładów, zależności i macierzy korelacji.</p>
+      </article>
+
+      <article>
+        <h2>Jakim poleceniem zaimportujemy bibliotekę pandas?</h2>
+        <p>Bibliotekę pandas najczęściej importujemy poleceniem: <code>import pandas as pd</code>.</p>
+      </article>
+
+      <article>
+        <h2>Chciałbym przewidzieć jaki będzie kurs euro na giełdzie użyję do tego metod:</h2>
+        <p>Do przewidywania kursu euro użyjemy metod regresji, ponieważ przewidywana jest wartość liczbowa.</p>
+      </article>
+
+      <article>
+        <h2>Proszę opisać krótko wybrane środowisko do pracy z Python do Machine Learning.</h2>
+        <p>Przykładem jest Jupyter Notebook. Pozwala pisać i uruchamiać kod w komórkach, od razu oglądać wyniki, tabele i wykresy oraz dokumentować analizę tekstem Markdown. Jest wygodny do eksploracji danych i eksperymentów ML.</p>
+      </article>
+
+      <article>
+        <h2>Chciałbym sprawdzać czy na zdjęciu jest kot, użyję do tego?</h2>
+        <p>Do takiego zadania użyjemy klasyfikacji obrazów, najczęściej z użyciem konwolucyjnych sieci neuronowych, czyli CNN.</p>
+      </article>
+
+      <article>
+        <h2>Proszę opisać reinforcement learning</h2>
+        <p>Reinforcement learning, czyli uczenie ze wzmocnieniem, polega na tym, że agent wykonuje działania w środowisku i uczy się strategii na podstawie nagród oraz kar. Przykładem są gry, robotyka albo systemy sterowania.</p>
+      </article>
+
+      <article>
+        <h2>Z czego się składa drzewo decyzyjne?</h2>
+        <p>Drzewo decyzyjne składa się z korzenia, węzłów wewnętrznych, gałęzi i liści. Węzły zawierają warunki podziału, gałęzie prowadzą do kolejnych decyzji, a liście zawierają wynik, np. klasę lub wartość.</p>
+      </article>
+
+      <article>
+        <h2>Czym się różni regresja liniowa od regresji logistycznej?</h2>
+        <p>Regresja liniowa przewiduje wartość ciągłą, np. cenę. Regresja logistyczna przewiduje prawdopodobieństwo przynależności do klasy i jest używana do klasyfikacji, np. tak/nie.</p>
+      </article>
+
+      <article>
+        <h2>Do czego używamy skalowania?</h2>
+        <p>Skalowania używamy do sprowadzenia cech liczbowych do porównywalnych zakresów. Jest to ważne zwłaszcza w algorytmach opartych na odległościach lub optymalizacji, np. SVM, k-NN, regresji i sieciach neuronowych.</p>
+      </article>
+
+      <article>
+        <h2>Proszę opisać warstwy w sieciach neuronowych.</h2>
+        <p>Sieć neuronowa składa się z warstwy wejściowej, jednej lub wielu warstw ukrytych oraz warstwy wyjściowej. Warstwa wejściowa przyjmuje dane, warstwy ukryte przetwarzają informacje, a warstwa wyjściowa zwraca wynik modelu.</p>
+      </article>
+
+      <article>
+        <h2>Proszę wymienić trzy przykładowe funkcje aktywacji w sieciach neuronowych.</h2>
+        <p>Przykładowe funkcje aktywacji to <strong>ReLU</strong>, <strong>sigmoid</strong> i <strong>softmax</strong>. Często spotyka się też <strong>tanh</strong>.</p>
+      </article>
+
+      <article>
+        <h2>Jakim słowem kluczowym tworzymy konstruktor w Python?</h2>
+        <p>Konstruktor w klasie Pythona tworzymy metodą specjalną <code>__init__</code>. Nie jest to zwykłe słowo kluczowe, ale specjalna metoda wywoływana przy tworzeniu obiektu.</p>
+      </article>
+
+      <article>
+        <h2>Dlaczego warto używać narzędzi takich jak Google Colab?</h2>
+        <p>Google Colab działa w przeglądarce, nie wymaga lokalnej konfiguracji środowiska, pozwala łatwo udostępniać notebooki i daje dostęp do zasobów obliczeniowych w chmurze, np. GPU lub TPU.</p>
+      </article>
+
+      <article>
+        <h2>Jakie są wady modeli AI uruchamianych lokalnie?</h2>
+        <p>Modele AI uruchamiane lokalnie mogą wymagać mocnego GPU, dużej ilości RAM, miejsca na dysku i trudniejszej konfiguracji. Mogą też działać wolniej niż w chmurze oraz szybciej zużywać zasoby komputera.</p>
+      </article>
+
+      <article>
+        <h2>Elementy składowe sztucznego neuronu.</h2>
+        <p>Sztuczny neuron składa się z wejść, wag, obciążenia bias, sumatora liczącego sumę ważoną, funkcji aktywacji oraz wyjścia.</p>
+      </article>
+
+      <article>
+        <h2>Czym jest scikit-learn?</h2>
+        <p><code>scikit-learn</code> to biblioteka Pythona do uczenia maszynowego. Zawiera gotowe algorytmy klasyfikacji, regresji, klasteryzacji, redukcji wymiarów, narzędzia do podziału danych i metryki oceny modeli.</p>
+      </article>
+
+      <article>
+        <h2>Do czego używamy <code>random_state</code> i czym jest?</h2>
+        <p><code>random_state</code> to ziarno losowości. Ustawia powtarzalność operacji losowych, np. podziału na dane treningowe i testowe, dzięki czemu przy kolejnym uruchomieniu otrzymujemy taki sam wynik.</p>
+      </article>
+
+      <article>
+        <h2>Poniższy kod zbuduje sieć neuronową ile będzie miała warstw?</h2>
+        <pre><code>model = Sequential([
+    Dense(64, activation='relu', input_shape=(10,)),
+    Dense(32, activation='relu'),
+    Dense(1, activation='sigmoid')
+])</code></pre>
+        <p>Sieć ma 3 warstwy typu <code>Dense</code>: pierwszą z 64 neuronami, drugą z 32 neuronami i wyjściową z 1 neuronem. Parametr <code>input_shape=(10,)</code> oznacza 10 cech wejściowych i zwykle nie liczy się go jako osobnej warstwy.</p>
+      </article>
+
+      <article>
+        <h2>Do czego używamy SMOTE?</h2>
+        <p>SMOTE używamy do balansowania niezrównoważonych zbiorów danych. Metoda generuje sztuczne przykłady klasy mniejszościowej, aby model nie faworyzował klasy większościowej.</p>
+      </article>
+
+      <article>
+        <h2>Co zrobi poniższy kod? (Tworzenie sieci neuronowej)</h2>
+        <pre><code>model = Sequential()
+model.add(Dense(16, activation='relu', input_shape=(8,)))
+model.add(Dense(1, activation='sigmoid'))
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])</code></pre>
+        <p>Kod tworzy i kompiluje prostą sieć neuronową do klasyfikacji binarnej. Ma warstwę ukrytą z 16 neuronami i aktywacją ReLU oraz warstwę wyjściową z 1 neuronem i aktywacją sigmoid. Kompilacja używa optymalizatora Adam, funkcji straty <code>binary_crossentropy</code> i metryki <code>accuracy</code>.</p>
+      </article>
+
+      <article>
+        <h2>Ile warstw ma poniższa sieć po ile neuronów?</h2>
+        <pre><code>model = Sequential([
+    Dense(128, activation='relu', input_shape=(20,)),
+    Dense(64, activation='relu'),
+    Dense(10, activation='softmax')
+])</code></pre>
+        <p>Sieć ma 3 warstwy <code>Dense</code>: pierwsza ma 128 neuronów, druga 64 neurony, a wyjściowa 10 neuronów. <code>input_shape=(20,)</code> oznacza 20 cech wejściowych, a nie dodatkową warstwę.</p>
+      </article>
+
+      <article>
+        <h2>Które ze stwierdzeń odnośnie LLM jest prawdziwe?</h2>
+        <p>LLM, czyli duże modele językowe, są trenowane na ogromnych zbiorach tekstu i uczą się przewidywać kolejne tokeny na podstawie wcześniejszego kontekstu. Nie gwarantują jednak zawsze prawdziwych odpowiedzi i mogą popełniać błędy.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

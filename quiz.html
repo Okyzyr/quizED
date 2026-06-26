@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Eksploracja Danych / Python ML</title>
+<style>
+  :root{
+    --bg:#0f1220; --card:#1a1e33; --card2:#222742; --acc:#6c8cff; --acc2:#4cd3a5;
+    --txt:#e8eaf2; --muted:#9aa0bd; --good:#3ddc97; --bad:#ff6b6b; --line:#2c3252;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:linear-gradient(160deg,#0f1220,#161a30);color:var(--txt);min-height:100vh;padding:24px}
+  .wrap{max-width:780px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;
+    font-size:14px;color:var(--muted)}
+  .bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:20px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));
+    width:0;transition:width .3s}
+  .qnum{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.5px}
+  .question{font-size:18px;font-weight:600;line-height:1.4;margin:6px 0 8px}
+  pre{background:#0c0f1c;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    overflow-x:auto;font-size:13px;color:#cfe3ff;margin:0 0 14px}
+  .answers{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .ans{text-align:left;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    padding:14px 16px;border-radius:12px;font-size:15px;cursor:pointer;transition:.15s;line-height:1.4}
+  .ans:hover:not(:disabled){border-color:var(--acc);transform:translateY(-1px)}
+  .ans:disabled{cursor:default}
+  .ans.correct{border-color:var(--good);background:rgba(61,220,151,.13)}
+  .ans.wrong{border-color:var(--bad);background:rgba(255,107,107,.13)}
+  .ans .mark{float:right;font-weight:700}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
+  .feedback{font-size:14px;font-weight:600;min-height:20px}
+  .feedback.ok{color:var(--good)} .feedback.no{color:var(--bad)}
+  button.nav{background:var(--acc);color:#0b0e1a;border:none;padding:11px 22px;border-radius:10px;
+    font-weight:700;font-size:15px;cursor:pointer}
+  button.nav:disabled{opacity:.4;cursor:not-allowed}
+  .result{text-align:center;padding:20px 0}
+  .score{font-size:54px;font-weight:800;margin:10px 0;
+    background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .grade{font-size:18px;color:var(--muted);margin-bottom:24px}
+  .review{text-align:left;margin-top:24px}
+  .rev-item{padding:12px 0;border-top:1px solid var(--line);font-size:14px}
+  .rev-q{font-weight:600;margin-bottom:4px}
+  .rev-a{color:var(--muted)}
+  .rev-a b.good{color:var(--good)} .rev-a b.bad{color:var(--bad)}
+  .center{text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Quiz — Eksploracja Danych w Pythonie</h1>
+  <div class="sub">25 losowych pytań · losowa kolejność pytań i odpowiedzi · za każdym razem od nowa</div>
+  <div id="app"></div>
+</div>
+
+<script>
+/* ====== BAZA PYTAŃ ======
+   Każde pytanie: q (treść), code (opcjonalny fragment kodu),
+   correct (poprawna odpowiedź), wrong (3 błędne).
+   Wszystkie 4 odpowiedzi mają zbliżoną długość i poziom szczegółowości,
+   żeby nie dało się zgadnąć poprawnej po samej formie (długości/detalach). */
+const BANK = [
+{q:"Na jakie pytania odpowiada klasyfikacja?",
+ correct:"Przypisuje obserwacje do z góry określonych kategorii/klas — odpowiada na pytanie „czy to A, czy B” (np. spam/nie-spam).",
+ wrong:["Przewiduje ciągłą wartość liczbową na podstawie cech — odpowiada na pytanie „ile?”, „jak dużo?” (np. cena mieszkania).",
+        "Grupuje obserwacje w nieznane wcześniej skupienia na podstawie ich podobieństwa, bez korzystania z gotowych etykiet.",
+        "Redukuje liczbę cech opisujących dane, zachowując przy tym możliwie najwięcej zawartej w nich pierwotnej informacji."]},
+
+{q:"Czym jest uczenie nadzorowane?",
+ correct:"Uczeniem na danych z etykietami — zbiór treningowy zawiera gotowe odpowiedzi (klasy lub wartości), które model ma odtwarzać.",
+ wrong:["Uczeniem na danych bez etykiet, w którym model samodzielnie szuka ukrytej struktury i powiązań między obserwacjami.",
+        "Uczeniem metodą prób i błędów, w którym agent dostaje nagrody i kary za poszczególne podejmowane przez siebie działania.",
+        "Uczeniem polegającym na łączeniu wielu słabszych modeli w jeden, znacznie silniejszy i dokładniejszy model predykcyjny."]},
+
+{q:"Czym jest uczenie nienadzorowane?",
+ correct:"Uczeniem na danych bez etykiet — model dostaje surowe dane i sam szuka w nich powiązań oraz struktur (np. skupień).",
+ wrong:["Uczeniem na danych z dołączonymi etykietami, w którym znana jest poprawna odpowiedź dla każdej pojedynczej obserwacji.",
+        "Uczeniem przez interakcję ze środowiskiem, w którym model jest nagradzany lub karany za podejmowane przez siebie decyzje.",
+        "Uczeniem, w którym ekspert ręcznie poprawia każdą predykcję modelu na bieżąco w trakcie całego procesu treningu."]},
+
+{q:"Czym jest uczenie ze wzmocnieniem?",
+ correct:"Agent uczy się przez interakcję ze środowiskiem metodą prób i błędów, maksymalizując nagrody i unikając kar.",
+ wrong:["Model uczy się na statycznym zbiorze danych z gotowymi etykietami, które ma później jak najwierniej odtwarzać.",
+        "Model grupuje nieoznakowane dane w skupienia na podstawie ich wzajemnego podobieństwa do siebie nawzajem.",
+        "Model przekształca dane wejściowe do niższego wymiaru, aby ułatwić ich późniejszą wizualizację i analizę."]},
+
+{q:"Czym jest klasteryzacja?",
+ correct:"Grupowaniem podobnych obserwacji w skupienia (klastry) bez wcześniejszych etykiet — np. segmentacja klientów sklepu.",
+ wrong:["Przypisywaniem obserwacji do z góry zdefiniowanych klas na podstawie wcześniej poznanych, oznakowanych przykładów.",
+        "Przewidywaniem ciągłej wartości liczbowej dla nowej obserwacji na podstawie wartości jej cech wejściowych.",
+        "Wykrywaniem pojedynczych obserwacji odstających, które wyraźnie nie pasują do reszty danych w całym zbiorze."]},
+
+{q:"Opisz overfitting (przeuczenie).",
+ correct:"Model zbyt dobrze dopasowuje się do danych treningowych (uczy się też szumu) i przez to słabo radzi sobie z nowymi danymi.",
+ wrong:["Model jest zbyt prosty, by uchwycić zależności w danych, więc słabo radzi sobie już na samym zbiorze treningowym (underfitting).",
+        "Model trenuje się znacznie szybciej niż zwykle dzięki bardzo dużej liczbie dostępnych danych treningowych.",
+        "Zbiór testowy jest znacznie większy od treningowego, przez co końcowa ocena modelu wychodzi zbyt optymistyczna."]},
+
+{q:"Co oznacza korelacja = 1?",
+ correct:"Idealną dodatnią korelację liniową — gdy jedna zmienna rośnie, druga rośnie proporcjonalnie w tym samym kierunku.",
+ wrong:["Idealną ujemną zależność liniową — gdy jedna zmienna rośnie, druga maleje dokładnie w tym samym tempie.",
+        "Całkowity brak zależności — zmiany jednej zmiennej w żaden sposób nie wiążą się ze zmianami drugiej zmiennej.",
+        "Że jedna zmienna jest bezpośrednią przyczyną zmian drugiej, czyli istnieje między nimi związek przyczynowy."]},
+
+{q:"Co robią biblioteki importowane w poniższym kodzie?",
+ code:"import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt",
+ correct:"numpy — obliczenia numeryczne na tablicach, pandas — analiza danych tabelarycznych, matplotlib — tworzenie wykresów.",
+ wrong:["numpy — wczytywanie plików CSV, pandas — tworzenie wykresów, matplotlib — szybkie obliczenia na dużych macierzach.",
+        "Wszystkie trzy to biblioteki służące wyłącznie do budowy i trenowania głębokich, wielowarstwowych sieci neuronowych.",
+        "Wszystkie trzy to narzędzia do obsługi i wykonywania zapytań w relacyjnych bazach danych za pomocą języka SQL."]},
+
+{q:"Do czego stosujemy regresję?",
+ correct:"Do przewidywania ciągłej wartości liczbowej na podstawie cech — odpowiada na pytania „ile?”, „jak dużo?”.",
+ wrong:["Do przypisywania obserwacji do jednej z kilku z góry zdefiniowanych klas, czyli etykiet (np. spam/nie-spam).",
+        "Do grupowania obserwacji w nieznane wcześniej skupienia na podstawie ich wzajemnego podobieństwa do siebie.",
+        "Do zmniejszania liczby cech w zbiorze przy zachowaniu możliwie największej ilości zawartej w nich informacji."]},
+
+{q:"Czym jest dummy coding?",
+ correct:"Kodowaniem zmiennych kategorycznych (nominalnych) na wartości liczbowe 0 i 1, czyli na zmienne zerojedynkowe.",
+ wrong:["Skalowaniem zmiennych liczbowych do wspólnego zakresu, najczęściej od 0 do 1, jeszcze przed treningiem modelu.",
+        "Uzupełnianiem brakujących wartości w kolumnach kategorycznych najczęściej występującą w nich kategorią.",
+        "Losowym mieszaniem kolejności wierszy w całym zbiorze danych przed jego podziałem na trening i test."]},
+
+{q:"Do czego służy ta funkcja?",
+ code:"train_test_split(X, y, test_size=0.2, random_state=42)",
+ correct:"Dzieli dane na zbiór treningowy (80%) i testowy (20%); random_state ustala losowanie, by podział był powtarzalny.",
+ wrong:["Trenuje model na całym zbiorze X i y, a parametr test_size określa docelową dokładność tego modelu.",
+        "Skaluje 20% cech do zakresu od 0 do 1, a pozostałe 80% danych pozostawia całkowicie bez żadnych zmian.",
+        "Usuwa 20% obserwacji odstających ze zbioru, aby poprawić jakość dopasowania modelu do pozostałych danych."]},
+
+{q:"Czym jest współczynnik determinacji i jakie przyjmuje wartości?",
+ correct:"Określa, jaki procent zmienności zmiennej zależnej tłumaczy model regresji; przyjmuje wartości od 0 do 1 (1 = idealne dopasowanie).",
+ wrong:["Mierzy średni błąd modelu w tych samych jednostkach co dane; przyjmuje wartości z przedziału od 0 do nieskończoności.",
+        "Określa kierunek oraz siłę korelacji liniowej między zmiennymi; przyjmuje wartości z przedziału od -1 do 1.",
+        "Wskazuje liczbę cech użytych w modelu regresji; przyjmuje zawsze wartości całkowite większe lub równe jeden."]},
+
+{q:"Czym jest błąd średniokwadratowy (MSE)?",
+ correct:"Średnią z kwadratów różnic między wartościami przewidzianymi a rzeczywistymi; im jest mniejsza, tym lepsze dopasowanie modelu.",
+ wrong:["Średnią z wartości bezwzględnych różnic między predykcją a wartością rzeczywistą — jest to z kolei miara MAE.",
+        "Procent poprawnie sklasyfikowanych obserwacji spośród wszystkich obserwacji znajdujących się w zbiorze testowym.",
+        "Sumę wszystkich wartości przewidzianych przez model, podzieloną następnie przez całkowitą liczbę cech w danych."]},
+
+{q:"Jak podejmują decyzję lasy losowe w pytaniach klasyfikacji?",
+ correct:"Każde drzewo oddaje głos na klasę, a wynikiem jest klasa wskazana przez większość drzew (głosowanie większościowe).",
+ wrong:["Wynikiem jest średnia arytmetyczna z liczbowych wartości przewidzianych przez wszystkie drzewa w całym lesie.",
+        "Decyduje pojedyncze, najgłębsze drzewo w lesie, a wszystkie pozostałe drzewa służą jedynie do jego kontroli.",
+        "Klasa jest losowana spośród przewidywań poszczególnych drzew, z prawdopodobieństwem równym dla każdego z nich."]},
+
+{q:"Do czego służy biblioteka pandas i jak ją zainstalować w Pythonie?",
+ correct:"Pandas służy do analizy i obróbki danych tabelarycznych (DataFrame); instalujemy go poleceniem pip install pandas.",
+ wrong:["Pandas służy do tworzenia wykresów i wizualizacji danych; instalujemy go poleceniem pip install matplotlib.",
+        "Pandas służy do budowy i trenowania sieci neuronowych; instalujemy go poleceniem pip install tensorflow.",
+        "Pandas jest modułem wbudowanym w standardowy Python, dlatego nie wymaga żadnej osobnej, ręcznej instalacji."]},
+
+{q:"Czym jest TensorFlow?",
+ correct:"Otwartym frameworkiem firmy Google do uczenia maszynowego, używanym głównie do budowy i trenowania sieci neuronowych.",
+ wrong:["Biblioteką do analizy i obróbki danych tabelarycznych, działającą podobnie do zwykłego arkusza kalkulacyjnego.",
+        "Narzędziem służącym wyłącznie do tworzenia wykresów oraz wizualizacji wyników przeprowadzonej analizy danych.",
+        "Systemem zarządzania relacyjnymi bazami danych, komunikującym się z danymi za pomocą języka zapytań SQL."]},
+
+{q:"Do czego służy biblioteka matplotlib i jak ją zainstalować w Pythonie?",
+ correct:"Matplotlib służy do tworzenia wykresów i wizualizacji danych; instalujemy go poleceniem pip install matplotlib.",
+ wrong:["Matplotlib służy do wczytywania i zapisywania plików CSV; instalujemy go poleceniem pip install csv.",
+        "Matplotlib służy do trenowania modeli uczenia maszynowego; instalujemy go poleceniem pip install sklearn.",
+        "Matplotlib jest modułem wbudowanym w standardowy Python, dlatego nie wymaga żadnej osobnej instalacji."]},
+
+{q:"Jak podejmują decyzję lasy losowe w problemach klasyfikacji?",
+ correct:"Przez głosowanie większościowe — każde drzewo wskazuje klasę, a wybierana jest ta z największą liczbą głosów.",
+ wrong:["Przez uśrednianie liczbowych wyników zwracanych przez wszystkie drzewa decyzyjne w całym lesie losowym.",
+        "Na podstawie jednego, wybranego losowo drzewa, którego pojedyncza decyzja traktowana jest jako ostateczna.",
+        "Przez wybór klasy, którą wskazało dokładnie pierwsze drzewo zbudowane w całym lesie podczas treningu."]},
+
+{q:"Za co odpowiada ta funkcja?",
+ code:"df['Age'].mean()",
+ correct:"Oblicza średnią arytmetyczną wszystkich wartości w kolumnie 'Age'.",
+ wrong:["Zwraca medianę, czyli wartość środkową, z całej kolumny 'Age'.",
+        "Zlicza liczbę niepustych wartości występujących w kolumnie 'Age'.",
+        "Zwraca największą wartość spośród wszystkich w kolumnie 'Age'."]},
+
+{q:"Do czego możemy użyć drzew decyzyjnych?",
+ correct:"Do zadań klasyfikacji i regresji — model podejmuje decyzję przez serię warunków (pytań) sprawdzanych na cechach.",
+ wrong:["Wyłącznie do klasteryzacji, czyli grupowania nieoznakowanych danych w skupienia bez korzystania z etykiet.",
+        "Wyłącznie do redukcji liczby wymiarów w bardzo dużych zbiorach danych jeszcze przed właściwym treningiem.",
+        "Wyłącznie do wykrywania obserwacji odstających, które wyraźnie nie pasują do reszty danych w zbiorze."]},
+
+{q:"Algorytmy ensemble to:",
+ correct:"Metody łączące wiele modeli predykcyjnych w jeden, by uzyskać lepszą wydajność niż pojedynczy model (np. lasy losowe).",
+ wrong:["Metody działające zawsze na jednym, ale za to bardzo głębokim i mocno rozbudowanym drzewie decyzyjnym.",
+        "Metody służące wyłącznie do normalizacji oraz skalowania cech jeszcze przed właściwym treningiem modelu.",
+        "Metody redukujące liczbę obserwacji w zbiorze przez usuwanie wierszy bardzo do siebie nawzajem podobnych."]},
+
+{q:"Opisz algorytm SVM.",
+ correct:"Szuka optymalnej hiperpłaszczyzny rozdzielającej klasy tak, by margines (odległość do najbliższych punktów) był jak największy.",
+ wrong:["Dzieli dane na k skupień, przypisując każdą obserwację do najbliższego środka, czyli centroidu danego klastra.",
+        "Buduje wiele niezależnych drzew decyzyjnych i łączy ich wyniki przez głosowanie większościowe lub uśrednianie.",
+        "Przekazuje dane przez kolejne warstwy neuronów połączonych wagami, ucząc się dzięki wstecznej propagacji błędu."]},
+
+{q:"Lasy losowe bazują na:",
+ correct:"Wielu drzewach decyzyjnych, z których każde uczy się na losowej próbce danych i losowym podzbiorze cech (bagging).",
+ wrong:["Jednym, bardzo głębokim drzewie decyzyjnym, które przy każdym podziale analizuje wszystkie dostępne cechy naraz.",
+        "Sieci neuronowej złożonej z wielu warstw ukrytych połączonych ze sobą wagami o różnej, dobieranej w treningu sile.",
+        "Obliczaniu odległości między obserwacjami i wyborze k najbliższych sąsiadów dla nowej próbki, podobnie jak k-NN."]},
+
+{q:"fillna użyjemy do:",
+ correct:"Uzupełnienia brakujących wartości (NaN) w danych — np. zerem, średnią lub medianą wartości z kolumny.",
+ wrong:["Usunięcia całych wierszy lub kolumn, które zawierają jakiekolwiek brakujące wartości (NaN), ze zbioru.",
+        "Odfiltrowania zbioru i pozostawienia wyłącznie tych wierszy, które spełniają zadany przez nas warunek.",
+        "Zmiany typu danych w kolumnie, na przykład z tekstowego na liczbę całkowitą lub zmiennoprzecinkową."]},
+
+{q:"Do czego użyjemy tych funkcji?",
+ code:"describe(), groupby(), str.lower()",
+ correct:"describe() — statystyki opisowe kolumn, groupby() — grupowanie danych po kolumnie, str.lower() — zamiana tekstu na małe litery.",
+ wrong:["describe() — rysuje wykres rozkładu wartości, groupby() — sortuje dane rosnąco, str.lower() — zlicza znaki w tekście.",
+        "describe() — usuwa brakujące dane, groupby() — łączy ze sobą dwie tabele, str.lower() — skraca zbyt długie napisy.",
+        "Wszystkie trzy służą do wczytywania danych z plików CSV oraz Excela bezpośrednio do obiektu typu DataFrame."]},
+
+{q:"Co zrobi ten kod?",
+ code:"moja_lista[::-1]",
+ correct:"Zwróci nową listę z elementami ułożonymi w odwróconej kolejności.",
+ wrong:["Zwróci co drugi element listy, zaczynając od pierwszego elementu.",
+        "Zwróci listę pozbawioną ostatniego elementu (skróconą o jeden).",
+        "Zwróci wyłącznie pierwszy i ostatni element z całej listy."]},
+
+{q:"Czym jest współczynnik Giniego?",
+ correct:"Miarą czystości węzła w drzewie — wynosi 0 przy maksymalnej czystości (jedna klasa), a rośnie, gdy klasy się mieszają.",
+ wrong:["Miarą średniego błędu predykcji w modelach regresji liniowej — im jest ona niższa, tym lepsze dopasowanie modelu.",
+        "Miarą siły korelacji liniowej między dwiema zmiennymi, przyjmującą wartości z przedziału od -1 do 1 włącznie.",
+        "Liczbą liści, czyli węzłów końcowych w drzewie decyzyjnym — im jest ona wyższa, tym głębsze i większe drzewo."]},
+
+{q:"Czym jest RBF (Radial Basis Function)?",
+ correct:"Jednym z jąder (kernel) w SVM (gaussowskie) — najczęściej stosowane dla danych nieliniowych; przenosi je do wyższego wymiaru.",
+ wrong:["Jądrem liniowym w SVM, które zakłada, że dane da się rozdzielić zwykłą prostą lub płaszczyzną bez przekształceń.",
+        "Funkcją kosztu używaną do oceny wielkości błędu modelu w problemach regresji liniowej oraz wielomianowej.",
+        "Algorytmem grupującym dane w skupienia na podstawie ich odległości od wyznaczonych środków poszczególnych klastrów."]},
+
+{q:"Jaki jest plus stosowania regresji wielomianowej nad liniową?",
+ correct:"Potrafi modelować zależności nieliniowe (krzywoliniowe), których zwykła prosta linia nie jest w stanie dobrze oddać.",
+ wrong:["Jest zawsze szybsza obliczeniowo i znacznie prostsza w trenowaniu niż klasyczna regresja liniowa, nawet przy wielu cechach.",
+        "Nigdy nie prowadzi do przeuczenia modelu, niezależnie od tego, jak wysoki stopień wielomianu zostanie wybrany.",
+        "Nie wymaga w ogóle danych treningowych, ponieważ samodzielnie dobiera odpowiedni kształt funkcji do problemu."]},
+
+{q:"Czym się różni regresja wieloraka od wielomianowej?",
+ correct:"Wieloraka używa wielu zmiennych objaśniających (liniowo), a wielomianowa potęg jednej zmiennej, by oddać nieliniowość.",
+ wrong:["To dokładnie ta sama metoda, opisywana jedynie dwiema różnymi, stosowanymi całkowicie zamiennie nazwami.",
+        "Wieloraka służy do klasyfikacji obserwacji do klas, a wielomianowa do grupowania ich w skupienia (klastry).",
+        "Wielomianowa zawsze korzysta z wielu zmiennych naraz, a wieloraka tylko z jednej, podniesionej do potęgi."]},
+
+{q:"K-means używamy do?",
+ correct:"Klasteryzacji — dzielenia danych na k skupień przez przypisanie każdej obserwacji do najbliższego środka klastra.",
+ wrong:["Klasyfikacji danych z gotowymi etykietami na podstawie wcześniej poznanych, oznakowanych przykładów.",
+        "Przewidywania ciągłej wartości liczbowej dla nowej obserwacji na podstawie wartości jej cech (regresji).",
+        "Uzupełniania brakujących danych średnią wartością wyliczoną z kilku najbliższych obserwacji w zbiorze."]},
+
+{q:"Co oznaczają kolory w drzewie decyzyjnym?",
+ correct:"Kolor oznacza dominującą klasę w węźle, a jego intensywność — czystość węzła (im ciemniej, tym bardziej jednorodne klasy).",
+ wrong:["Kolor oznacza liczbę cech użytych w danym węźle, a jego intensywność — głębokość tego węzła w całym drzewie.",
+        "Kolory wskazują kolejność, w jakiej poszczególne węzły były tworzone podczas trenowania całego drzewa.",
+        "Kolory są przydzielane zupełnie losowo i służą jedynie wizualnemu odróżnieniu od siebie sąsiednich węzłów."]},
+
+{q:"Czym są lasy losowe i jakie są minusy ich stosowania?",
+ correct:"To zespół wielu drzew decyzyjnych; minusem jest słaba interpretowalność oraz wysokie koszty obliczeniowe i pamięciowe.",
+ wrong:["To pojedyncze, mocno rozbudowane drzewo decyzyjne; jego jedynym istotnym minusem jest skłonność do przeuczenia.",
+        "To rodzaj sieci neuronowej; jej głównym minusem jest całkowity brak możliwości stosowania do zadań klasyfikacji.",
+        "To metoda klasteryzacji; jej minusem jest konieczność wcześniejszego, ręcznego podania docelowej liczby klastrów."]},
+
+{q:"Czym jest R² i ile powinien wynosić?",
+ correct:"To współczynnik determinacji; powinien być jak najbliżej 1 — wtedy model najlepiej tłumaczy zmienność danych.",
+ wrong:["To miara błędu modelu; powinna być jak największa, najlepiej znacznie przekraczająca wartość równą 1.",
+        "To współczynnik korelacji; powinien wynosić dokładnie 0, co miałoby oznaczać całkowity brak obciążenia modelu.",
+        "To liczba cech w modelu; powinna wynosić co najmniej 10, aby model można było uznać za w pełni wiarygodny."]},
+
+{q:"Do czego użyjemy biblioteki seaborn?",
+ correct:"Do tworzenia czytelnych wizualizacji statystycznych; działa jako wygodna nadbudowa nad biblioteką matplotlib.",
+ wrong:["Do budowy i trenowania głębokich sieci neuronowych, podobnie jak biblioteki TensorFlow czy Keras.",
+        "Do wykonywania zapytań i pobierania danych z relacyjnych baz danych za pomocą języka zapytań SQL.",
+        "Do uzupełniania oraz czyszczenia brakujących wartości w dużych, tabelarycznych zbiorach danych."]},
+
+{q:"Jakim poleceniem zaimportujemy bibliotekę pandas?",
+ correct:"import pandas as pd",
+ wrong:["install pandas as pd","from pandas import pd","pip install pandas as pd"]},
+
+{q:"Chciałbym przewidzieć, jaki będzie kurs euro na giełdzie — użyję do tego metod:",
+ correct:"Regresji — przewiduje wartość liczbową (kurs) na podstawie cech, odpowiadając na pytanie „ile?”.",
+ wrong:["Klasyfikacji — przypisuje daną obserwację do jednej z kilku z góry zdefiniowanych klas (etykiet).",
+        "Klasteryzacji — grupuje dane w skupienia na podstawie ich podobieństwa, bez korzystania z etykiet.",
+        "Redukcji wymiarów — zmniejsza liczbę cech opisujących dane jeszcze przed właściwą analizą danych."]},
+
+{q:"Proszę opisać krótko wybrane środowisko do pracy z Pythonem do Machine Learning.",
+ correct:"Np. Jupyter Notebook — interaktywne środowisko, w którym kod pisze się i uruchamia w komórkach, z podglądem wyników i wykresów.",
+ wrong:["Np. Excel — jedyne dostępne środowisko zdolne uruchamiać kod w języku Python wraz z bibliotekami uczenia maszynowego.",
+        "Np. Photoshop — zaawansowane środowisko przeznaczone głównie do trenowania oraz oceny modeli uczenia maszynowego.",
+        "Np. Notatnik systemowy — proste środowisko, które samodzielnie uruchamia i kompiluje skrypty napisane w Pythonie."]},
+
+{q:"Chciałbym sprawdzać, czy na zdjęciu jest kot — użyję do tego?",
+ correct:"Konwolucyjnych sieci neuronowych (CNN) — służą do analizy obrazów i klasyfikacji ich zawartości.",
+ wrong:["Regresji liniowej — służy do przewidywania ciągłej wartości liczbowej na podstawie podanych cech.",
+        "Algorytmu K-means — służy do grupowania nieoznakowanych danych w skupienia, czyli klastry.",
+        "Współczynnika korelacji — służy do mierzenia siły zależności liniowej między dwiema zmiennymi."]},
+
+{q:"Proszę opisać reinforcement learning.",
+ correct:"Agent uczy się optymalnych działań przez interakcję ze środowiskiem, otrzymując nagrody za dobre i kary za złe decyzje.",
+ wrong:["Model uczy się na statycznym, w pełni oznakowanym zbiorze danych z gotowymi, poprawnymi odpowiedziami.",
+        "Model grupuje nieoznakowane dane w skupienia na podstawie ich wzajemnego podobieństwa do siebie nawzajem.",
+        "Model redukuje liczbę cech w danych, aby przyspieszyć i uprościć dalsze obliczenia w trakcie treningu."]},
+
+{q:"Z czego składa się drzewo decyzyjne?",
+ correct:"Z korzenia (pierwsze pytanie), węzłów wewnętrznych (kolejne warunki) i liści (decyzje/klasy), połączonych gałęziami.",
+ wrong:["Z warstwy wejściowej, kilku warstw ukrytych oraz warstwy wyjściowej, połączonych ze sobą wagami o różnej sile.",
+        "Ze środków klastrów, czyli centroidów, oraz przypisanych do nich grup obserwacji o zbliżonych do siebie cechach.",
+        "Z wektorów nośnych, marginesu oraz hiperpłaszczyzny rozdzielającej od siebie poszczególne klasy danych."]},
+
+{q:"Czym się różni regresja liniowa od regresji logistycznej?",
+ correct:"Liniowa przewiduje ciągłą wartość liczbową, a logistyczna prawdopodobieństwo przynależności do klasy (klasyfikacja).",
+ wrong:["Obie metody przewidują ciągłe wartości liczbowe i różnią się jedynie zastosowaną nazwą oraz wzorem.",
+        "Liniowa służy do klasyfikacji obserwacji do klas, a logistyczna do przewidywania ciągłych wartości liczbowych.",
+        "Logistyczna grupuje dane w skupienia, a liniowa porządkuje obserwacje według wartości jednej wybranej cechy."]},
+
+{q:"Do czego używamy skalowania?",
+ correct:"Do sprowadzenia cech do porównywalnego zakresu, by cecha o dużych wartościach nie dominowała nad pozostałymi w modelu.",
+ wrong:["Do usuwania brakujących wartości ze zbioru przez zastąpienie ich średnią wyliczoną z całej danej kolumny.",
+        "Do zwiększenia liczby obserwacji w zbiorze przez automatyczne generowanie dodatkowych, sztucznych próbek.",
+        "Do zamiany zmiennych kategorycznych na wartości liczbowe, na przykład metodą kodowania zerojedynkowego."]},
+
+{q:"Proszę opisać warstwy w sieciach neuronowych.",
+ correct:"Warstwa wejściowa (dane), co najmniej jedna warstwa ukryta (przetwarzanie) oraz warstwa wyjściowa (wynik).",
+ wrong:["Warstwa korzenia, warstwy pośrednich gałęzi oraz warstwa liści zawierająca końcowe decyzje modelu.",
+        "Warstwa treningowa, warstwa testowa oraz warstwa walidacyjna, na które dzieli się wszystkie dostępne dane.",
+        "Warstwa wektorów nośnych, warstwa marginesu oraz warstwa hiperpłaszczyzny rozdzielającej poszczególne klasy."]},
+
+{q:"Proszę wymienić trzy przykładowe funkcje aktywacji w sieciach neuronowych.",
+ correct:"ReLU, sigmoid i tanh — wprowadzają nieliniowość, dzięki której sieć potrafi uczyć się złożonych zależności.",
+ wrong:["MSE, MAE i R² — są to miary służące do oceny wielkości błędu i jakości dopasowania modelu do danych.",
+        "SVM, k-NN i K-means — są to osobne algorytmy uczenia maszynowego, a nie elementy sieci neuronowych.",
+        "pandas, numpy i matplotlib — są to biblioteki języka Python służące do analizy oraz wizualizacji danych."]},
+
+{q:"Jakim słowem kluczowym tworzymy konstruktor w Pythonie?",
+ correct:"__init__ — metodą wywoływaną automatycznie przy tworzeniu nowego obiektu danej klasy.",
+ wrong:["constructor — słowem kluczowym zarezerwowanym w Pythonie do definiowania konstruktora klasy.",
+        "self — słowem kluczowym, które tworzy nowy obiekt i od razu inicjuje wszystkie jego atrybuty.",
+        "new — operatorem wywoływanym podczas tworzenia nowej instancji obiektu z danej klasy."]},
+
+{q:"Dlaczego warto używać narzędzi takich jak Google Colab?",
+ correct:"Daje darmowy dostęp do GPU/TPU w chmurze, działa w przeglądarce bez konfiguracji i ułatwia udostępnianie notebooków.",
+ wrong:["Działa wyłącznie offline, nie wymaga konta Google i nie potrzebuje żadnego połączenia z internetem do działania.",
+        "Samodzielnie pisze cały kod za użytkownika, więc nie trzeba znać ani języka Python, ani żadnych bibliotek ML.",
+        "Zastępuje język Python własnym, uproszczonym językiem, co rzekomo znacząco przyspiesza naukę uczenia maszynowego."]},
+
+{q:"Jakie są wady modeli AI uruchamianych lokalnie?",
+ correct:"Wymagają mocnego sprzętu (wydajne GPU, dużo pamięci RAM), zużywają sporo zasobów i bywają trudne w konfiguracji.",
+ wrong:["Wymagają stałego połączenia z internetem i przestają działać natychmiast zaraz po jego nagłej utracie.",
+        "Całkowicie uniemożliwiają zachowanie prywatności danych, ponieważ zawsze wysyłają je do chmury obliczeniowej.",
+        "Nie da się ich w ogóle uruchomić bez wcześniejszego wykupienia płatnej i dość kosztownej usługi chmurowej."]},
+
+{q:"Elementy składowe sztucznego neuronu.",
+ correct:"Wejścia, wagi przypisane połączeniom, sumator (suma ważona wejść), funkcja aktywacji oraz wyjście neuronu.",
+ wrong:["Korzeń, węzły wewnętrzne z warunkami, łączące je gałęzie oraz liście zawierające końcowe decyzje.",
+        "Środki klastrów (centroidy), przypisane do nich obserwacje oraz odległości między poszczególnymi punktami.",
+        "Wektory nośne, margines oraz hiperpłaszczyzna rozdzielająca od siebie poszczególne klasy danych w zbiorze."]},
+
+{q:"Czym jest scikit-learn?",
+ correct:"Biblioteką Pythona z gotowymi algorytmami ML (klasyfikacja, regresja, klasteryzacja) oraz narzędziami do obróbki danych.",
+ wrong:["Biblioteką służącą wyłącznie do tworzenia wykresów oraz interaktywnych wizualizacji wyników analizy danych.",
+        "Systemem zarządzania relacyjnymi bazami danych, korzystającym z języka zapytań SQL do operacji na danych.",
+        "Frameworkiem do budowy stron internetowych oraz rozbudowanych aplikacji webowych napisanych w języku Python."]},
+
+{q:"Do czego używamy random_state i czym jest?",
+ correct:"To ziarno losowości — ustala wynik losowań tak, by przy każdym uruchomieniu podział i model były identyczne (powtarzalne).",
+ wrong:["To liczba drzew budowanych w lesie losowym — im jest ona większa, tym dokładniejszy, lecz wolniejszy model.",
+        "To procent danych przeznaczonych na zbiór testowy podczas dzielenia zbioru na część treningową i testową.",
+        "To parametr włączający losowe tasowanie kolejności kolumn w danych przy każdej iteracji trenowania modelu."]},
+
+{q:"Poniższy kod zbuduje sieć neuronową — ile będzie miała warstw?",
+ code:"model = Sequential([\n    Dense(64, activation='relu', input_shape=(10,)),\n    Dense(32, activation='relu'),\n    Dense(1, activation='sigmoid')\n])",
+ correct:"3 warstwy: dwie ukryte (64 i 32 neurony) oraz wyjściowa (1 neuron); warstwy wejściowej zwykle się nie liczy.",
+ wrong:["1 warstwę — liczona jest wyłącznie ostatnia warstwa Dense, odpowiadająca za końcowy wynik całego modelu.",
+        "10 warstw — dokładnie tyle, ile wynosi input_shape, czyli liczba cech wejściowych podawanych do sieci.",
+        "64 warstwy — dokładnie tyle, ile neuronów ma pierwsza warstwa Dense zdefiniowana w tym fragmencie kodu."]},
+
+{q:"Do czego używamy SMOTE?",
+ correct:"Do balansowania niezbalansowanych klas przez generowanie sztucznych przykładów klasy mniejszościowej.",
+ wrong:["Do usuwania obserwacji odstających, które zaburzają dopasowanie modelu do danych treningowych.",
+        "Do skalowania cech do wspólnego zakresu, najczęściej od 0 do 1, przed właściwym treningiem modelu.",
+        "Do redukcji liczby cech w zbiorze przy zachowaniu jak największej ilości zawartej w nich informacji."]},
+
+{q:"Co zrobi poniższy kod? (tworzenie sieci neuronowej)",
+ code:"model = Sequential()\nmodel.add(Dense(16, activation='relu', input_shape=(8,)))\nmodel.add(Dense(1, activation='sigmoid'))\nmodel.compile(optimizer='adam',\n              loss='binary_crossentropy',\n              metrics=['accuracy'])",
+ correct:"Zbuduje i skompiluje prostą sieć do klasyfikacji binarnej — warstwa ukryta z ReLU oraz wyjście z funkcją sigmoid.",
+ wrong:["Wytrenuje gotową sieć na danych treningowych i wyświetli osiągniętą na nich końcową dokładność modelu.",
+        "Wczyta wcześniej zapisany na dysku model sieci neuronowej i przygotuje go do wykonywania predykcji.",
+        "Narysuje wykres przedstawiający architekturę sieci neuronowej wraz z liczbą neuronów w każdej z warstw."]},
+
+{q:"Ile warstw ma poniższa sieć i po ile neuronów?",
+ code:"model = Sequential([\n    Dense(128, activation='relu', input_shape=(20,)),\n    Dense(64, activation='relu'),\n    Dense(10, activation='softmax')\n])",
+ correct:"3 warstwy Dense: kolejno 128, 64 i 10 neuronów (warstwy wejściowej input_shape się nie liczy).",
+ wrong:["2 warstwy: 64 i 10 neuronów — pierwsza warstwa Dense pełni jedynie rolę warstwy wejściowej.",
+        "4 warstwy: 20, 128, 64 i 10 neuronów — pierwszą warstwą jest input_shape równe 20 neuronów.",
+        "1 warstwa ze 128 neuronami — kolejne liczby to tylko dodatkowe parametry tej jednej warstwy."]},
+
+{q:"Które ze stwierdzeń odnośnie LLM jest prawdziwe?",
+ correct:"LLM trenuje się na ogromnych zbiorach tekstu i przewidują kolejne tokeny (słowa) na podstawie wcześniejszego kontekstu.",
+ wrong:["LLM zawsze zwracają w pełni prawdziwe i dokładnie zweryfikowane informacje, dlatego nigdy się nie mylą.",
+        "LLM działają zupełnie bez danych treningowych — wystarczy zadać im pytanie, by od razu się czegoś nauczyły.",
+        "LLM rozumieją tekst w pełni świadomie, dokładnie w taki sam sposób, w jaki rozumie go czytający człowiek."]}
+];
+
+const QUIZ_LEN = 25;
+
+/* ---- narzędzia ---- */
+function shuffle(a){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+let quiz, idx, score, answered, picks;
+
+function startQuiz(){
+  quiz = shuffle(BANK).slice(0, Math.min(QUIZ_LEN, BANK.length)).map(item=>{
+    const opts = shuffle([
+      {text:item.correct, correct:true},
+      ...item.wrong.map(w=>({text:w, correct:false}))
+    ]);
+    return {q:item.q, code:item.code, opts};
+  });
+  idx=0; score=0; answered=false; picks=[];
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  const item=quiz[idx];
+  const pct=Math.round((idx/quiz.length)*100);
+  app.innerHTML=`
+    <div class="card">
+      <div class="topbar">
+        <span>Pytanie ${idx+1} / ${quiz.length}</span>
+        <span>Punkty: ${score}</span>
+      </div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="qnum">PYTANIE ${idx+1}</div>
+      <div class="question">${esc(item.q)}</div>
+      ${item.code?`<pre>${esc(item.code)}</pre>`:''}
+      <div class="answers" id="answers"></div>
+      <div class="footer">
+        <span class="feedback" id="fb"></span>
+        <button class="nav" id="next" disabled>Dalej →</button>
+      </div>
+    </div>`;
+  const box=document.getElementById('answers');
+  item.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='ans';
+    b.innerHTML=esc(o.text);
+    b.onclick=()=>choose(i,b);
+    box.appendChild(b);
+  });
+  document.getElementById('next').onclick=next;
+}
+
+function choose(i,btn){
+  if(answered) return;
+  answered=true;
+  const item=quiz[idx];
+  const chosen=item.opts[i];
+  picks.push({q:item.q, chosen:chosen.text, correct:item.opts.find(o=>o.correct).text, ok:chosen.correct});
+  const buttons=document.querySelectorAll('.ans');
+  buttons.forEach((b,j)=>{
+    b.disabled=true;
+    if(item.opts[j].correct){b.classList.add('correct');b.querySelector('.mark')||(b.innerHTML+=' <span class="mark">✓</span>');}
+    if(j===i && !item.opts[j].correct){b.classList.add('wrong');b.innerHTML+=' <span class="mark">✗</span>';}
+  });
+  const fb=document.getElementById('fb');
+  if(chosen.correct){score++;fb.textContent='Dobrze!';fb.className='feedback ok';}
+  else{fb.textContent='Źle — poprawna odpowiedź zaznaczona na zielono.';fb.className='feedback no';}
+  document.getElementById('next').disabled=false;
+  document.getElementById('next').textContent = (idx===quiz.length-1)?'Zobacz wynik →':'Dalej →';
+}
+
+function next(){
+  if(idx<quiz.length-1){idx++;answered=false;render();}
+  else showResult();
+}
+
+function showResult(){
+  const pct=Math.round((score/quiz.length)*100);
+  let grade;
+  if(pct>=90) grade='Świetnie! 🎉';
+  else if(pct>=70) grade='Dobry wynik 👍';
+  else if(pct>=50) grade='Zaliczone, ale jest co poprawiać.';
+  else grade='Warto jeszcze poćwiczyć.';
+  const reviewHtml=picks.map((p,i)=>`
+    <div class="rev-item">
+      <div class="rev-q">${i+1}. ${esc(p.q)}</div>
+      <div class="rev-a">Twoja odpowiedź: <b class="${p.ok?'good':'bad'}">${esc(p.chosen)}</b></div>
+      ${p.ok?'':`<div class="rev-a">Poprawna: <b class="good">${esc(p.correct)}</b></div>`}
+    </div>`).join('');
+  document.getElementById('app').innerHTML=`
+    <div class="card">
+      <div class="result">
+        <div>Twój wynik</div>
+        <div class="score">${score} / ${quiz.length}</div>
+        <div class="grade">${pct}% · ${grade}</div>
+        <button class="nav" onclick="startQuiz()">Spróbuj ponownie (nowe losowanie)</button>
+      </div>
+      <div class="review">
+        <h3>Przegląd odpowiedzi</h3>
+        ${reviewHtml}
+      </div>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+startQuiz();
+</script>
+</body>
+</html>
